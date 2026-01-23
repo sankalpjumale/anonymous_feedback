@@ -46,7 +46,12 @@ export async function GET(request: Request){
             }, {status: 200}
         )
     } catch (error) {
-        
+        return Response.json(
+            {
+                success: false,
+                message: 'Error in getting message'
+            }, {status: 500}
+        )
     }
 
 
