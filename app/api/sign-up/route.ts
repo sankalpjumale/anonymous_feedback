@@ -22,7 +22,7 @@ export async function POST(request: Request) {
         }
 
         const existingUserByEmail = await UserModel.findOne({email})
-        const verifyCode = Math.floor(100000 + Math.random() * 900000).toString()
+        let verifyCode = Math.floor(100000 + Math.random() * 900000).toString()
         if(existingUserByEmail){
             if(existingUserByEmail.isVerified) {
                 return Response.json({
@@ -64,13 +64,13 @@ export async function POST(request: Request) {
         if (!emailResponse.success) {
             return Response.json({
                 success: false,
-                message: emailResponse.messages
+                message: emailResponse.message
             }, {status: 500})
         }
 
         return Response.json({
             success: true,
-            message: "User registered successfully"
+            message: "User registered successfully. Please verify your account."
         }, {status: 201})
     } catch (error) {
         console.error('Error in registering user', error)

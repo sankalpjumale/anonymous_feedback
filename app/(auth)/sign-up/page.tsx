@@ -24,6 +24,7 @@ const page = () => {
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const debounced = useDebounceCallback(setUsername, 300)
+    // const debouncedUsername = useDebounce(username, 300)
     const router = useRouter()
 
     // zod implementation
@@ -38,13 +39,12 @@ const page = () => {
 
     useEffect(() => {
         const checkUsernameUnique = async () => {
-            if (username) {
+            if (debounced) {
                 setIsCheckingUsername(true)
-                setUsernameMessage('')
+                setUsernameMessage('') //reset message
                 try {
-                    const response = await axios.get(`/api/check-username-unique?username=${username}`)
-                    let message = response.data.message
-                    setUsernameMessage(message)
+                    const response = await axios.get<ApiResponse>(`/api/check-username-unique?username=${debounced}`)
+                    setUsernameMessage(response.data.message)
                 } catch (error) {
                     const axiosError = error as AxiosError<ApiResponse>;
                     setUsernameMessage(
@@ -56,7 +56,7 @@ const page = () => {
             }
         }
         checkUsernameUnique()
-    }, [username])
+    }, [debounced])
 
     const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
         setIsSubmitting(true)
@@ -77,11 +77,11 @@ const page = () => {
     }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-gray-800">
         <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
             <div className="text-center">
-                <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl md-6">Message from Anonymous</h1>
-                <p className="md-4">Sign to start your anonymous journey</p>
+                <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl md-6">Join Message from Anonymous</h1>
+                <p className="md-4">Sign up to start your anonymous journey</p>
             </div>
 
             <Form {...form}>
@@ -92,18 +92,16 @@ const page = () => {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Username</FormLabel>
-                                <FormControl>
                                     <Input 
                                         placeholder='username' 
                                         {...field}
                                         onChange={(e) => {
                                             field.onChange(e)
-                                            debounced(e.target.value)
+                                            setUsername(e.target.value)
                                         }}
                                     />
-                                </FormControl>
                                 {isCheckingUsername && <Loader2 className="animate-spin"/>}
-                                <p className={`text-sm ${usernameMessage === "Username is unique" ? 'text-green-500' : 'text-red-500'}`}>test {usernameMessage}</p>
+                                <p className={`text-sm ${usernameMessage === "Username is unique" ? 'text-green-500' : 'text-red-500'}`}>{usernameMessage}</p>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -115,12 +113,11 @@ const page = () => {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Email</FormLabel>
-                                <FormControl>
-                                    <Input 
-                                        placeholder='email' 
-                                        {...field}
-                                    />
-                                </FormControl>
+                                <Input 
+                                    placeholder='email' 
+                                    {...field}
+                                />
+                                <p className="text-muted text-gray-400 text-sm">We shall send you verification code</p>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -132,20 +129,18 @@ const page = () => {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Password</FormLabel>
-                                <FormControl>
                                     <Input 
                                         type="password"
                                         placeholder='password' 
                                         {...field}
                                     />
-                                </FormControl>
                                 <FormMessage />
                             </FormItem>
 
                         )}
                     />
 
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
                         {
                             isSubmitting ? (
                                 <>

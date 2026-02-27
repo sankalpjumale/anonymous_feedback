@@ -12,7 +12,7 @@ export async function DELETE(request: Request, {params}: {params: {messageid: st
     const session = await getServerSession(authOptions)
     const user: User = session?.user as User
 
-    if (!session || !session.user) {
+    if (!session || !user) {
         return Response.json(
             {
                 success: false,
@@ -24,9 +24,9 @@ export async function DELETE(request: Request, {params}: {params: {messageid: st
     try {
         const updateResult = await UserModel.updateOne(
             {_id: user._id},
-            {$pull: {message: {_id: messageId}}}
+            {$pull: {messages: {_id: messageId}}}
         )
-        if (updateResult.modifiedCount == 0){
+        if (updateResult.modifiedCount === 0){
             return Response.json(
                 {
                     success: false,
@@ -44,7 +44,7 @@ export async function DELETE(request: Request, {params}: {params: {messageid: st
             {status: 200}
         )
     } catch (error) {
-        console.log("Error is delete message delete route", error)
+        console.log("Error in deleting message", error)
         return Response.json(
             {
                 success: false,

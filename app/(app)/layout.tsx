@@ -23,16 +23,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
+        <div className="flex flex-col min-h-screen">
           <Navbar/>
           {children}
           
-        </body>
-        
-    </html>
+        </div>
   );
 }

@@ -33,15 +33,16 @@ export async function POST(request: Request) {
                 {
                     success: false,
                     message: 'Failed to update user status to accept messages',
-                    updatedUser
-                }, {status: 200}
+                    // updatedUser
+                }, {status: 404}
             )
         }
 
         return Response.json(
             {
                 success: true,
-                message: 'Message acceptance status updated successfully'
+                message: 'Message acceptance status updated successfully',
+                updatedUser
             }, {status: 200}
         )
     } catch (error) {
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
     await dbConnect()
 
+    // getting the user session
     const session = await getServerSession(authOptions)
     const user: User = session?.user as User
 
@@ -70,10 +72,10 @@ export async function GET(request: Request) {
         )
     }
 
-    const userId = user._id;
+    // const userId = user._id;
 
     try {
-        const foundUser = await UserModel.findById(userId)
+        const foundUser = await UserModel.findById(user._id)
         if (!foundUser){
             return Response.json(
                 {
@@ -90,6 +92,7 @@ export async function GET(request: Request) {
             }, {status: 200}
         )
     } catch (error) {
+        console.error('Error is getting message acceptance status', error)
         return Response.json(
             {
                 success: false,

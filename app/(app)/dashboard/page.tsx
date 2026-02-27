@@ -22,15 +22,15 @@ const page = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isSwitchLoading, setIsSwitchLoading] = useState(false)
 
-  // const handleDeleteMessage = (messageId: string) => {
-  //   setMessages(messages.filter((message) => message._id !== messageId))
-  // }
-
   const handleDeleteMessage = (messageId: string) => {
-  setMessages((prevMessages) =>  // ✅ Always gets current state
-    prevMessages.filter((message) => message._id.toString() !== messageId)
-  )
-}
+    setMessages(messages.filter((message) => message._id.toString() !== messageId))
+  }
+
+//   const handleDeleteMessage = (messageId: string) => {
+//   setMessages((prevMessages) =>  // Always gets current state
+//     prevMessages.filter((message) => message._id.toString() !== messageId)
+//   )
+// }
 
   const {data: session} = useSession()
 
@@ -49,11 +49,11 @@ const page = () => {
       setValue('acceptMessages', Boolean(response.data.isAcceptingMessages))
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>
-      toast.error(axiosError.response?.data.message || "Failed to fetch message setting")
+      toast.error(axiosError.response?.data.message ?? "Failed to fetch message setting")
     } finally {
       setIsSwitchLoading(false)
     }
-  }, [setValue])
+  }, [setValue, toast])
 
   const fetchMessages = useCallback( async (refresh: boolean = false) => {
     setIsLoading(true)
@@ -66,18 +66,18 @@ const page = () => {
       }
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>
-      toast.error(axiosError.response?.data.message || "Failed to fetch message setting")
+      toast.error(axiosError.response?.data.message ?? "Failed to fetch message setting")
     } finally {
       setIsLoading(false)
       setIsSwitchLoading(false)
     }
-  }, [setIsLoading, setMessages])
+  }, [setIsLoading, setMessages, toast])
 
   useEffect(() => {
     if (!session || !session.user) return 
     fetchMessages()
     fetchAcceptMessages()
-  }, [session, setValue, fetchAcceptMessages, fetchMessages])
+  }, [session, setValue, fetchAcceptMessages, fetchMessages, toast])
 
   //handle switch change
   const handleSwitchChange = async() => {
@@ -89,8 +89,12 @@ const page = () => {
       toast(response.data.message)
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>
-      toast.error(axiosError.response?.data.message || "Failed to fetch message setting")
+      toast.error(axiosError.response?.data.message ?? "Failed to fetch message setting")
     }
+  }
+
+  if (!session || !session.user) {
+    return <div>Please Login</div>
   }
 
   const {username} = session?.user as User
@@ -100,10 +104,6 @@ const page = () => {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(profileUrl)
     toast("URL copied")
-  }
-
-  if (!session || !session.user) {
-    return <div>Please Login</div>
   }
 
   return (

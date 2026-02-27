@@ -52,10 +52,10 @@ const page = () => {
     }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+    <div className="flex justify-center items-center min-h-screen bg-gray-800">
         <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
             <div className="text-center">
-                <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl md-6">Message from Anonymous</h1>
+                <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl md-6">Welcome back to Message from Anonymous</h1>
                 <p className="md-4">Sigin to start your anonymous journey</p>
             </div>
 
@@ -69,12 +69,10 @@ const page = () => {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Email/Username</FormLabel>
-                                <FormControl>
                                     <Input 
                                         placeholder='email/username' 
                                         {...field}
                                     />
-                                </FormControl>
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -86,20 +84,20 @@ const page = () => {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Password</FormLabel>
-                                <FormControl>
+                                
                                     <Input 
                                         type="password"
                                         placeholder='password' 
                                         {...field}
                                     />
-                                </FormControl>
+                                
                                 <FormMessage />
                             </FormItem>
 
                         )}
                     />
 
-                    <Button type="submit">
+                    <Button className="w-full" type="submit">
                         Signin
                     </Button>
                 </form>
@@ -107,7 +105,7 @@ const page = () => {
             <div className="text-center mt-4">
                 <p>
                     Already a member?{''}
-                    <Link href="/sign-in" className="text-blue-600 hover:text-blue-800">Sign in</Link>
+                    <Link href="/sign-up" className="text-blue-600 hover:text-blue-800">Sign up</Link>
                 </p>
             </div>
         </div>

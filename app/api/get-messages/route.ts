@@ -11,7 +11,7 @@ export async function GET(request: Request){
     const session = await getServerSession(authOptions)
     const user: User = session?.user as User
 
-    if (!session || !session.user) {
+    if (!session || !user) {
         return Response.json(
             {
                 success: false,
@@ -24,28 +24,29 @@ export async function GET(request: Request){
 
     try {
         const user = await UserModel.aggregate([
-            { $match: {id: userId}},
+            { $match: {_id: userId}},
             { $unwind: '$messages'},
             { $sort: {'messages.createdAt' : -1}},
             { $group: {_id: '$_id', messaages: {$push: '$messages'}}}
-        ])
+        ]).exec()
 
         if (!user || user.length === 0) {
             return Response.json(
                 {
                     success: false,
                     message: "User not found"
-                }, {status: 401}
+                }, {status: 404}
             )
         }
 
         return Response.json(
             {
-                success: true,
+                // success: true,
                 messages: user[0].messages
             }, {status: 200}
         )
     } catch (error) {
+        console.error('Error in getting messages', error)
         return Response.json(
             {
                 success: false,
