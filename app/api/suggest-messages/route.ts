@@ -1,8 +1,12 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextRequest, NextResponse } from 'next/server';
 
+if(!process.env.GOOGLE_GEMINI_API_KEY){
+  throw new Error('Missing GOOGLE_GEMINI_API_KEY environment variable')
+}
+
 // Initialize Gemini with API key
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY!);
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,33 +29,26 @@ export async function POST(request: NextRequest) {
 
     // Generate content
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const text = result.response.text().trim().replace(/\n/g, '')
 
-    // Clean up the response (remove extra whitespace, newlines)
-    const cleanedText = text.trim().replace(/\n/g, '');
+    const messages = text
+      .split('||')
+      .map((m) => m.trim())
+      .filter((m) => m.length > 0)
 
     // Return the suggested messages
-    return NextResponse.json({
+    return Response.json({
       success: true,
-      messages: cleanedText
+      messages
     }, { status: 200 });
 
   } catch (error: any) {
-    console.error('Error generating messages with Gemini:', error);
-    
-    // Return error response
-    return NextResponse.json({
+    console.error('Error generating messages with Gemini: ', error);
+    // not exposing raw error.message to client
+    return Response.json({
       success: false,
       message: 'Failed to generate message suggestions',
       error: error.message
     }, { status: 500 });
   }
-}
-
-// Optional: Add GET method for testing
-export async function GET(request: NextRequest) {
-  return NextResponse.json({
-    message: 'Use POST method to generate message suggestions'
-  }, { status: 200 });
 }

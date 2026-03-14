@@ -10,37 +10,34 @@ import { ApiResponse } from "@/types/ApiResponse";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { AxiosError } from "axios";
 import { Loader2, RefreshCcw } from "lucide-react";
-import { User } from "next-auth";
-import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
+import { useUser } from "@clerk/nextjs";
 
-const page = () => {
+const DashboardPage = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isSwitchLoading, setIsSwitchLoading] = useState(false)
+  const {user, isLoaded} = useUser(); //useUser replaces useSession
 
   const handleDeleteMessage = (messageId: string) => {
-    setMessages(messages.filter((message) => message._id.toString() !== messageId))
-  }
-
-//   const handleDeleteMessage = (messageId: string) => {
-//   setMessages((prevMessages) =>  // Always gets current state
-//     prevMessages.filter((message) => message._id.toString() !== messageId)
-//   )
-// }
-
-  const {data: session} = useSession()
+    setMessages((prevMessages) =>
+      prevMessages.filter((message) => message._id.toString() !== messageId)
+    );
+  };
 
   const form = useForm<z.infer<typeof acceptMessageSchema>>({
-    resolver: zodResolver(acceptMessageSchema)
+    resolver: zodResolver(acceptMessageSchema),
+    defaultValues: {
+      acceptMessages: false
+    }
   })
 
   const {register, watch, setValue} = form
 
-  const acceptMessage = watch('acceptMessages')
+  const acceptMessage = watch('acceptMessages') ?? false
 
   const fetchAcceptMessages = useCallback(async () => {
     setIsSwitchLoading(true)
@@ -53,7 +50,7 @@ const page = () => {
     } finally {
       setIsSwitchLoading(false)
     }
-  }, [setValue, toast])
+  }, [setValue])
 
   const fetchMessages = useCallback( async (refresh: boolean = false) => {
     setIsLoading(true)
@@ -69,15 +66,15 @@ const page = () => {
       toast.error(axiosError.response?.data.message ?? "Failed to fetch message setting")
     } finally {
       setIsLoading(false)
-      setIsSwitchLoading(false)
     }
-  }, [setIsLoading, setMessages, toast])
+    // empty dependency array
+  }, [setIsLoading, setMessages])
 
   useEffect(() => {
-    if (!session || !session.user) return 
+    if (!isLoaded || !user) return 
     fetchMessages()
     fetchAcceptMessages()
-  }, [session, setValue, fetchAcceptMessages, fetchMessages, toast])
+  }, [isLoaded, user, fetchAcceptMessages, fetchMessages])
 
   //handle switch change
   const handleSwitchChange = async() => {
@@ -93,11 +90,19 @@ const page = () => {
     }
   }
 
-  if (!session || !session.user) {
+  if (!isLoaded) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin"/>
+      </div>
+    )
+  }
+
+  if (!user){
     return <div>Please Login</div>
   }
 
-  const {username} = session?.user as User
+  const username =  user.username ?? user.primaryEmailAddress?.emailAddress ?? '';
   const baseUrl = `${window.location.protocol}//${window.location.host}`
   const profileUrl = `${baseUrl}/u/${username}`
 
@@ -122,17 +127,16 @@ const page = () => {
           />
           <Button onClick={copyToClipboard}>Copy</Button>
         </div>
-
       </div>
 
       <div className="mb-4">
         <Switch
           {...register('acceptMessages')}
-          checked={acceptMessage}
+          checked={Boolean(acceptMessage)}
           onCheckedChange={handleSwitchChange}
           disabled={isSwitchLoading}
         />
-        <span className="ml-2">Accept Messages:{acceptMessage ? 'On' : 'Off'}</span>
+        <span className="ml-2"> Accept Messages:{acceptMessage ? 'On' : 'Off'}</span>
       </div>
 
       <Separator/>
@@ -169,4 +173,4 @@ const page = () => {
   )
 }
 
-export default page
+export default DashboardPage

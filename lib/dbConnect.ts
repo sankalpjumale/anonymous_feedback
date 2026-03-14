@@ -1,4 +1,3 @@
-import { log } from "console";
 import mongoose from "mongoose";
 
 type ConnectionObject = {
@@ -13,6 +12,10 @@ async function dbConnect(): Promise<void> {
         return
     }
 
+    if(!process.env.MONGODB_URI) {
+        throw new Error("MONGODB_URI is not defined in .env file")
+    }
+
     try {
         const db = await mongoose.connect(process.env.MONGODB_URI || '', {})
 
@@ -21,9 +24,9 @@ async function dbConnect(): Promise<void> {
         console.log("DB connected successfully");
         
     } catch (error) {
-        console.log("Database connection failed", error);
-        
-        process.exit(1)
+        console.error("Database connection failed", error);
+        throw new Error(`Database connection failed: ${error}`)
+        // process.exit(1)
     }
 }
 

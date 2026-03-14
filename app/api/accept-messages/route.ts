@@ -1,30 +1,22 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/options";
+import {auth} from "@clerk/nextjs/server";
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/models/User";
-import { User } from "next-auth";
 
 export async function POST(request: Request) {
     await dbConnect()
-
-    const session = await getServerSession(authOptions)
-    const user: User = session?.user as User
-
-    if (!session || !session.user) {
+    const {userId} = await auth()
+    if(!userId) {
         return Response.json(
-            {
-                success: false,
-                message: "Not Authenticated"
-            }, {status: 401}
+            {success: false, message: 'Not Authenticated'},
+            {status: 401}
         )
     }
-
-    const userId = user._id;
     const {acceptMessages} = await request.json()
 
     try {
-        const updatedUser = await UserModel.findByIdAndUpdate(
-            userId,
+        //find user by clerkId instead of MongoDB_id
+        const updatedUser = await UserModel.findOneAndUpdate(
+            {clerkId: userId},
             { isAcceptingMessage: acceptMessages},
             {new: true}
         )
@@ -46,7 +38,7 @@ export async function POST(request: Request) {
             }, {status: 200}
         )
     } catch (error) {
-        console.log('Failed to update user status to accept messages')
+        console.error('Failed to update user status to accept messages', error)
         return Response.json(
             {
                 success: false,
@@ -58,24 +50,17 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
     await dbConnect()
-
-    // getting the user session
-    const session = await getServerSession(authOptions)
-    const user: User = session?.user as User
-
-    if (!session || !session.user) {
+    const {userId} = await auth()
+    if(!userId) {
         return Response.json(
-            {
-                success: false,
-                message: "Not Authenticated"
-            }, {status: 401}
+            {success: false, message: 'Not Authenticated'},
+            {status: 401}
         )
     }
 
-    // const userId = user._id;
-
     try {
-        const foundUser = await UserModel.findById(user._id)
+        // find user by clerkId instead of MongoDB _id
+        const foundUser = await UserModel.findOne({clerkId: userId})
         if (!foundUser){
             return Response.json(
                 {

@@ -2,8 +2,6 @@
 import {
   Card,
   CardAction,
-  CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -45,7 +43,7 @@ const MessageCard = ({ message, onMessageDelete }: MessageCardProps) => {
     }
 
   return (
-    <Card className="card-bordered">
+    <Card className="border border-gray-200 shadow-sm">
         <CardHeader>
             <div className="flex justify-between items-center">
                 <CardTitle>{message.content}</CardTitle>
@@ -59,8 +57,7 @@ const MessageCard = ({ message, onMessageDelete }: MessageCardProps) => {
                         <AlertDialogHeader>
                             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                             <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete your
-                                account from our servers.
+                                This action cannot be undone. This message will be permanently deleted.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
 
@@ -69,16 +66,13 @@ const MessageCard = ({ message, onMessageDelete }: MessageCardProps) => {
                         <AlertDialogAction onClick={handleDeleteConfirm}>Continue</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
-
                 </AlertDialog>
             </div>
-            <div className="text-sm">
+
+            <div className="text-sm text-gray-500">
                 {dayjs(message.createdAt).format('MMM D, YYYY h:mm A')}
             </div>
-
         </CardHeader>
-        <CardContent>
-        </CardContent>
     </Card>
   )
 }

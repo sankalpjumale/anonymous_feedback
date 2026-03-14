@@ -1,36 +1,29 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/options";
+import {auth} from "@clerk/nextjs/server";
 import dbConnect from "@/lib/dbConnect";
-import UserModel from "@/models/User";
-import { User } from "next-auth";
-import mongoose from "mongoose";
+import UserModel, {Message} from "@/models/User";
+
 
 export async function GET(request: Request){
     await dbConnect()
 
-    const session = await getServerSession(authOptions)
-    const user: User = session?.user as User
+    const {userId} = await auth()
 
-    if (!session || !user) {
+    if(!userId) {
         return Response.json(
-            {
-                success: false,
-                message: "Not Authenticated"
-            }, {status: 401}
+            {success: false, message: "Not Authenticated"},
+            {status: 401}
         )
     }
 
-    const userId = new mongoose.Types.ObjectId(user._id);
-
     try {
-        const user = await UserModel.aggregate([
-            { $match: {_id: userId}},
-            { $unwind: '$messages'},
+        const userWithMessages = await UserModel.aggregate([
+            { $match: {clerkId: userId}},
+            { $unwind: {path: '$messages', preserveNullAndEmptyArrays: true}},
             { $sort: {'messages.createdAt' : -1}},
-            { $group: {_id: '$_id', messaages: {$push: '$messages'}}}
+            { $group: {_id: '$_id', messages: {$push: '$messages'}}}
         ]).exec()
 
-        if (!user || user.length === 0) {
+        if (!userWithMessages || userWithMessages.length === 0) {
             return Response.json(
                 {
                     success: false,
@@ -39,14 +32,17 @@ export async function GET(request: Request){
             )
         }
 
+        const messages = (userWithMessages[0].messages as (Message | null)[])
+        .filter((m:any) => m !== null)
+
         return Response.json(
             {
-                // success: true,
-                messages: user[0].messages
+                success: true,
+                messages: userWithMessages[0].messages
             }, {status: 200}
         )
     } catch (error) {
-        console.error('Error in getting messages', error)
+        console.error('Error in getting messages: ', error)
         return Response.json(
             {
                 success: false,
