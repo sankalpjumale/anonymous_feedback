@@ -1,20 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { NextRequest, NextResponse } from 'next/server';
 
-if(!process.env.GOOGLE_GEMINI_API_KEY){
-  throw new Error('Missing GOOGLE_GEMINI_API_KEY environment variable')
-}
-
-// Initialize Gemini with API key
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
-
-export async function POST(request: NextRequest) {
-  try {
-    // Get the Gemini model (use gemini-pro for text generation)
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-    // Create the prompt for generating message suggestions
-    const prompt = `Create a list of three open-ended and engaging questions formatted as a single string. These questions are for an anonymous social messaging platform, like Qooh.me
+ const prompt = `Create a list of three open-ended and engaging questions formatted as a single string. These questions are for an anonymous social messaging platform, like Qooh.me
     
     Requirements:
     - Avoid personal or sensitive topics
@@ -27,6 +13,24 @@ export async function POST(request: NextRequest) {
     
     Ensure the questions are intriguing, foster curiosity, and contribute to a positive and welcoming conversational environment.`;
 
+
+
+
+export async function POST() {
+  if(!process.env.GOOGLE_GEMINI_API_KEY) {
+    return Response.json(
+      {success: false, message: 'Gemini API key is not configured'},
+      {status: 500}
+    )
+  }
+
+  try {
+    // Initialize inside function -only at request time out build time
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY)
+
+    // Get the Gemini model (use gemini-pro for text generation)
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+   
     // Generate content
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim().replace(/\n/g, '')
