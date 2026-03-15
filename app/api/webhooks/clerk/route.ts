@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { WebhookEvent } from '@clerk/nextjs/server';
 import dbConnect from '@/lib/dbConnect';
 import UserModel from '@/models/User';
+import { emit } from 'process';
 
 
 export async function POST(request: Request) {
@@ -48,10 +49,12 @@ export async function POST(request: Request) {
         )
     }
 
+    await dbConnect()
+
     // handle user.created event
     // this fires when a user successfully signs up via clerk
     if(event.type === 'user.created') {
-        await dbConnect()
+        // await dbConnect()
 
         const {id, username, email_addresses} = event.data
         const email = email_addresses[0]?.email_address
@@ -78,10 +81,36 @@ export async function POST(request: Request) {
         }
     }
 
+    // handle user.updated event
+    if(event.type === 'user.updated') {
+        const {id, username, email_addresses} = event.data
+        const email = email_addresses[0]?.email_address
+
+        try {
+            await UserModel.findOneAndUpdate(
+                {clerkId: id},
+                {username: username ?? email, email},
+                {new: true}
+            )
+
+            return Response.json(
+                {success: true, message: 'User updated'},
+                {status: 200}
+            )
+        } catch (error) {
+            console.error('Error updating user: ', error)
+            return Response.json(
+                {success: false, message: 'Error updating user'},
+                {status: 500}
+            )
+        }
+    }
+
     // handle user.deleted ebent
     //this fires when a user deletes their clerk account
     if(event.type === 'user.deleted') {
-        await dbConnect()
+        // await dbConnect()
+
 
         try {
             await UserModel.findOneAndDelete({clerkId: event.data.id})
